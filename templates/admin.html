@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - IPL 2026 Predictor</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: system-ui; background: #0a0e1a; color: #f1f5f9; padding: 16px; }
+  h1 { color: #f59e0b; font-size: 22px; margin-bottom: 8px; }
+  h2 { color: #f59e0b; font-size: 18px; margin: 24px 0 12px; }
+  a { color: #3b82f6; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .topbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid #1e293b; }
+  table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px; }
+  th, td { padding:8px 10px; text-align:left; border-bottom:1px solid #1e293b; }
+  th { color:#94a3b8; font-weight:600; font-size:11px; text-transform:uppercase; }
+  tr:hover { background:#111827; }
+  .badge { font-size:11px; padding:2px 8px; border-radius:12px; font-weight:600; }
+  .badge-up { background:rgba(16,185,129,0.15); color:#10b981; }
+  .badge-done { background:rgba(239,68,68,0.15); color:#ef4444; }
+  .form-box { background:#111827; border:1px solid #1e293b; border-radius:12px; padding:16px; margin-bottom:20px; }
+  .form-row { display:flex; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+  input, select { padding:8px 10px; background:#0f1729; border:1px solid #1e293b; border-radius:6px; color:#f1f5f9; font-size:13px; flex:1; min-width:120px; }
+  select { cursor:pointer; }
+  button { padding:8px 16px; background:linear-gradient(135deg,#f59e0b,#d97706); border:none; border-radius:6px; color:#000; font-weight:700; cursor:pointer; font-size:13px; }
+  .team-links { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+  .team-link { padding:6px 12px; background:#111827; border:1px solid #1e293b; border-radius:8px; font-size:12px; }
+</style>
+</head><body>
+
+<div class="topbar">
+  <h1>🏏 IPL 2026 Admin</h1>
+  <a href="/admin/logout">Logout</a>
+</div>
+
+<!-- Team Quick Links -->
+<h2>👥 Teams & Players</h2>
+<div class="team-links">
+  {% for team in teams %}
+  <a href="/admin/team/{{ team.id }}/players" class="team-link">{{ team.short_name }}</a>
+  {% endfor %}
+</div>
+
+<!-- Add Player -->
+<div class="form-box">
+  <h2 style="margin-top:0">➕ Add Player</h2>
+  <form method="POST" action="/admin/add-player">
+    <div class="form-row">
+      <input name="name" placeholder="Player Name" required>
+      <select name="team_id" required>
+        <option value="">Select Team</option>
+        {% for team in teams %}
+        <option value="{{ team.id }}">{{ team.short_name }} - {{ team.name }}</option>
+        {% endfor %}
+      </select>
+      <select name="role">
+        <option value="Batter">Batter</option>
+        <option value="Bowler">Bowler</option>
+        <option value="All-Rounder">All-Rounder</option>
+        <option value="Wicket-Keeper">Wicket-Keeper</option>
+      </select>
+      <button type="submit">Add Player</button>
+    </div>
+  </form>
+</div>
+
+<!-- Add Match -->
+<div class="form-box">
+  <h2 style="margin-top:0">➕ Add Match</h2>
+  <form method="POST" action="/admin/add-match">
+    <div class="form-row">
+      <input name="match_number" type="number" placeholder="Match #" required style="max-width:80px;">
+      <input name="match_date" type="date" required>
+      <input name="match_time" value="19:30" placeholder="HH:MM" style="max-width:80px;">
+    </div>
+    <div class="form-row">
+      <select name="home_team_id" required>
+        <option value="">Home Team</option>
+        {% for team in teams %}
+        <option value="{{ team.id }}">{{ team.short_name }}</option>
+        {% endfor %}
+      </select>
+      <select name="away_team_id" required>
+        <option value="">Away Team</option>
+        {% for team in teams %}
+        <option value="{{ team.id }}">{{ team.short_name }}</option>
+        {% endfor %}
+      </select>
+      <input name="venue" placeholder="Venue" required>
+      <button type="submit">Add Match</button>
+    </div>
+  </form>
+</div>
+
+<!-- Matches List -->
+<h2>📅 All Matches ({{ matches|length }})</h2>
+<table>
+  <thead><tr><th>#</th><th>Date</th><th>Time</th><th>Home</th><th>Away</th><th>Venue</th><th>Status</th><th>Action</th></tr></thead>
+  <tbody>
+    {% for m in matches %}
+    <tr>
+      <td>{{ m.match_number }}</td>
+      <td>{{ m.match_date }}</td>
+      <td>{{ m.match_time }}</td>
+      <td><b>{{ m.home_short }}</b></td>
+      <td><b>{{ m.away_short }}</b></td>
+      <td>{{ m.venue }}</td>
+      <td><span class="badge {{ 'badge-up' if m.status == 'upcoming' else 'badge-done' }}">{{ m.status }}</span></td>
+      <td><a href="/admin/match/{{ m.id }}">Manage</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+</body></html>

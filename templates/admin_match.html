@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Match #{{ match.match_number }} - Admin</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: system-ui; background: #0a0e1a; color: #f1f5f9; padding: 16px; }
+  h1 { color: #f59e0b; font-size: 20px; margin-bottom: 4px; }
+  h2 { color: #f59e0b; font-size: 16px; margin: 20px 0 10px; }
+  a { color: #3b82f6; text-decoration: none; }
+  .back { display:inline-block; margin-bottom:16px; font-size:14px; }
+  .match-header { background:#111827; border:1px solid #1e293b; border-radius:12px; padding:16px; margin-bottom:16px; text-align:center; }
+  .match-header .teams { font-size:28px; font-weight:800; margin:8px 0; }
+  .match-header .info { color:#94a3b8; font-size:13px; }
+  .status { display:inline-block; font-size:12px; padding:3px 10px; border-radius:12px; font-weight:600; }
+  .status-upcoming { background:rgba(16,185,129,0.15); color:#10b981; }
+  .status-completed { background:rgba(239,68,68,0.15); color:#ef4444; }
+  .form-box { background:#111827; border:1px solid #1e293b; border-radius:12px; padding:16px; margin-bottom:16px; }
+  label { display:block; font-size:12px; color:#94a3b8; margin-bottom:4px; font-weight:600; }
+  select { width:100%; padding:8px; background:#0f1729; border:1px solid #1e293b; border-radius:6px; color:#f1f5f9; font-size:13px; margin-bottom:12px; }
+  button { padding:10px 20px; background:linear-gradient(135deg,#f59e0b,#d97706); border:none; border-radius:8px; color:#000; font-weight:700; cursor:pointer; font-size:14px; width:100%; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th, td { padding:8px; text-align:left; border-bottom:1px solid #1e293b; }
+  th { color:#94a3b8; font-size:11px; text-transform:uppercase; }
+  .pts { color:#f59e0b; font-weight:700; }
+  .correct { color:#10b981; }
+  .wrong { color:#ef4444; }
+</style>
+</head><body>
+
+<a href="/admin" class="back">← Back to Dashboard</a>
+
+<div class="match-header">
+  <span class="status status-{{ match.status }}">{{ match.status|upper }}</span>
+  <div class="teams">{{ match.home_short }} vs {{ match.away_short }}</div>
+  <div class="info">Match #{{ match.match_number }} • {{ match.match_date }} • {{ match.match_time }} IST • {{ match.venue }}</div>
+</div>
+
+<!-- Set Results Form -->
+<div class="form-box">
+  <h2 style="margin-top:0">🏆 Set Match Results</h2>
+  <form method="POST" action="/admin/match/{{ match.id }}/results">
+    <label>🪙 Toss Winner (5 pts)</label>
+    <select name="toss_winner_id">
+      <option value="">-- Select --</option>
+      <option value="{{ match.home_team_id }}" {{ 'selected' if match.toss_winner_id == match.home_team_id }}>{{ match.home_team }}</option>
+      <option value="{{ match.away_team_id }}" {{ 'selected' if match.toss_winner_id == match.away_team_id }}>{{ match.away_team }}</option>
+    </select>
+
+    <label>🏆 Match Winner (10 pts)</label>
+    <select name="match_winner_id">
+      <option value="">-- Select --</option>
+      <option value="{{ match.home_team_id }}" {{ 'selected' if match.match_winner_id == match.home_team_id }}>{{ match.home_team }}</option>
+      <option value="{{ match.away_team_id }}" {{ 'selected' if match.match_winner_id == match.away_team_id }}>{{ match.away_team }}</option>
+    </select>
+
+    <label>🏏 Top Run-Scorer (20 pts)</label>
+    <select name="top_scorer_id">
+      <option value="">-- Select --</option>
+      {% for p in players %}
+      <option value="{{ p.id }}" {{ 'selected' if match.top_scorer_id == p.id }}>{{ p.name }} ({{ p.team_short }})</option>
+      {% endfor %}
+    </select>
+
+    <label>🎯 Top Wicket-Taker (20 pts)</label>
+    <select name="top_wicket_taker_id">
+      <option value="">-- Select --</option>
+      {% for p in players %}
+      <option value="{{ p.id }}" {{ 'selected' if match.top_wicket_taker_id == p.id }}>{{ p.name }} ({{ p.team_short }})</option>
+      {% endfor %}
+    </select>
+
+    <label>⭐ Player of the Match (25 pts)</label>
+    <select name="player_of_match_id">
+      <option value="">-- Select --</option>
+      {% for p in players %}
+      <option value="{{ p.id }}" {{ 'selected' if match.player_of_match_id == p.id }}>{{ p.name }} ({{ p.team_short }})</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit">💾 Save Results & Calculate Points</button>
+  </form>
+</div>
+
+<!-- Predictions for this match -->
+<h2>📊 User Predictions ({{ predictions|length }})</h2>
+{% if predictions %}
+<div style="overflow-x:auto;">
+<table>
+  <thead><tr>
+    <th>User</th><th>Toss</th><th>Winner</th><th>Top Scorer</th><th>Top Wicket</th><th>POTM</th><th>Points</th>
+  </tr></thead>
+  <tbody>
+    {% for p in predictions %}
+    <tr>
+      <td><b>{{ p.username or p.first_name or 'User' }}</b></td>
+      <td>{{ p.toss_team_name or '—' }}</td>
+      <td>{{ p.match_team_name or '—' }}</td>
+      <td>{{ p.top_scorer_name or '—' }}</td>
+      <td>{{ p.top_wicket_name or '—' }}</td>
+      <td>{{ p.potm_name or '—' }}</td>
+      <td class="pts">{{ p.points_earned }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+</div>
+{% else %}
+<p style="color:#64748b; text-align:center; padding:20px;">No predictions for this match yet.</p>
+{% endif %}
+
+</body></html>

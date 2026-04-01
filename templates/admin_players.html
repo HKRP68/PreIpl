@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ team.name }} Players - Admin</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: system-ui; background: #0a0e1a; color: #f1f5f9; padding: 16px; }
+  h1 { color: #f59e0b; font-size: 20px; margin-bottom: 16px; }
+  a { color: #3b82f6; text-decoration: none; }
+  .back { display:inline-block; margin-bottom:16px; font-size:14px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th, td { padding:10px; text-align:left; border-bottom:1px solid #1e293b; }
+  th { color:#94a3b8; font-size:11px; text-transform:uppercase; }
+  .role { font-size:11px; padding:2px 8px; border-radius:10px; }
+  .role-batter { background:rgba(59,130,246,0.15); color:#3b82f6; }
+  .role-bowler { background:rgba(239,68,68,0.15); color:#ef4444; }
+  .role-all-rounder { background:rgba(16,185,129,0.15); color:#10b981; }
+  .form-box { background:#111827; border:1px solid #1e293b; border-radius:12px; padding:16px; margin-bottom:20px; }
+  .form-row { display:flex; gap:10px; }
+  input, select { padding:8px; background:#0f1729; border:1px solid #1e293b; border-radius:6px; color:#f1f5f9; font-size:13px; flex:1; }
+  button { padding:8px 16px; background:linear-gradient(135deg,#f59e0b,#d97706); border:none; border-radius:6px; color:#000; font-weight:700; cursor:pointer; }
+  .team-links { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+  .team-link { padding:4px 10px; background:#111827; border:1px solid #1e293b; border-radius:6px; font-size:12px; }
+  .team-link.active { border-color:#f59e0b; color:#f59e0b; }
+</style>
+</head><body>
+
+<a href="/admin" class="back">← Back to Dashboard</a>
+<h1>{{ team.short_name }} — {{ team.name }}</h1>
+
+<div class="team-links">
+  {% for t in teams %}
+  <a href="/admin/team/{{ t.id }}/players" class="team-link {{ 'active' if t.id == team.id }}">{{ t.short_name }}</a>
+  {% endfor %}
+</div>
+
+<div class="form-box">
+  <form method="POST" action="/admin/add-player">
+    <input type="hidden" name="team_id" value="{{ team.id }}">
+    <div class="form-row">
+      <input name="name" placeholder="Player Name" required>
+      <select name="role">
+        <option value="Batter">Batter</option>
+        <option value="Bowler">Bowler</option>
+        <option value="All-Rounder">All-Rounder</option>
+        <option value="Wicket-Keeper">Wicket-Keeper</option>
+      </select>
+      <button type="submit">Add</button>
+    </div>
+  </form>
+</div>
+
+<table>
+  <thead><tr><th>ID</th><th>Name</th><th>Role</th></tr></thead>
+  <tbody>
+    {% for p in players %}
+    <tr>
+      <td>{{ p.id }}</td>
+      <td><b>{{ p.name }}</b></td>
+      <td><span class="role role-{{ p.role|lower|replace(' ', '-') }}">{{ p.role }}</span></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<p style="color:#64748b; margin-top:12px; font-size:13px;">Total: {{ players|length }} players</p>
+
+</body></html>

@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>IPL 2026 Predictions</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0e1a;
+    --card: #111827;
+    --card-hover: #1a2235;
+    --border: #1e293b;
+    --primary: #f59e0b;
+    --primary-glow: rgba(245, 158, 11, 0.15);
+    --accent: #3b82f6;
+    --green: #10b981;
+    --red: #ef4444;
+    --text: #f1f5f9;
+    --text-dim: #94a3b8;
+    --text-muted: #64748b;
+    --radius: 14px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 50%, #1e1b4b 100%);
+    padding: 20px 16px 16px;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    border-bottom: 1px solid var(--border);
+  }
+  .header h1 {
+    font-size: 20px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 0.5px;
+  }
+  .header .subtitle {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* ── Tabs ── */
+  .tabs {
+    display: flex;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 58px;
+    z-index: 99;
+  }
+  .tab {
+    flex: 1;
+    padding: 12px 8px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+  }
+  .tab .tab-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+
+  /* ── Pages ── */
+  .page { display: none; padding: 12px; padding-bottom: 80px; }
+  .page.active { display: block; }
+
+  /* ── Match Cards ── */
+  .match-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .match-card:active { transform: scale(0.98); background: var(--card-hover); }
+  .match-card .match-num {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .match-card .match-num .badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 600;
+  }
+  .badge-open { background: rgba(16,185,129,0.15); color: var(--green); }
+  .badge-closed { background: rgba(239,68,68,0.15); color: var(--red); }
+  .badge-predicted { background: var(--primary-glow); color: var(--primary); }
+  .match-teams {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 8px 0;
+  }
+  .team-info { text-align: center; flex: 1; }
+  .team-short { font-size: 22px; font-weight: 800; }
+  .team-name { font-size: 10px; color: var(--text-dim); margin-top: 2px; }
+  .vs-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    padding: 0 8px;
+  }
+  .match-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Prediction Form ── */
+  .predict-page .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 0;
+    margin-bottom: 12px;
+  }
+  .predict-header {
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .predict-header .match-title { font-size: 24px; font-weight: 800; }
+  .predict-header .match-info { font-size: 12px; color: var(--text-dim); margin-top: 4px; }
+
+  .predict-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 12px;
+  }
+  .predict-section h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .predict-section .points-badge {
+    font-size: 10px;
+    background: var(--primary-glow);
+    color: var(--primary);
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .predict-section .desc {
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .option-grid { display: flex; flex-direction: column; gap: 6px; }
+  .option-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: #0f1729;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 13px;
+    color: var(--text);
+  }
+  .option-btn:active { transform: scale(0.98); }
+  .option-btn.selected {
+    border-color: var(--primary);
+    background: var(--primary-glow);
+  }
+  .option-btn .radio {
+    width: 18px; height: 18px;
+    border: 2px solid var(--text-muted);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .option-btn.selected .radio {
+    border-color: var(--primary);
+    background: var(--primary);
+  }
+  .option-btn.selected .radio::after {
+    content: '✓';
+    color: #000;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .option-btn .player-role {
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+
+  .team-filter {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  .team-filter-btn {
+    flex: 1;
+    padding: 6px;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .team-filter-btn.active {
+    background: var(--primary-glow);
+    border-color: var(--primary);
+    color: var(--primary);
+  }
+
+  .player-search {
+    width: 100%;
+    padding: 8px 12px;
+    background: #0f1729;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Outfit', sans-serif;
+    margin-bottom: 8px;
+    outline: none;
+  }
+  .player-search:focus { border-color: var(--primary); }
+  .player-search::placeholder { color: var(--text-muted); }
+
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 16px;
+    font-weight: 700;
+    color: #000;
+    cursor: pointer;
+    margin-top: 12px;
+    font-family: 'Outfit', sans-serif;
+    transition: all 0.2s;
+  }
+  .submit-btn:active { transform: scale(0.97); }
+  .submit-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* ── Leaderboard ── */
+  .lb-header {
+    text-align: center;
+    padding: 16px;
+    background: linear-gradient(135deg, #1e1b4b, #312e81);
+    border-radius: var(--radius);
+    margin-bottom: 12px;
+  }
+  .lb-header .rank-big { font-size: 40px; font-weight: 800; color: var(--primary); }
+  .lb-header .rank-label { font-size: 12px; color: var(--text-dim); }
+  .lb-header .points-big { font-size: 18px; font-weight: 700; margin-top: 4px; }
+
+  .lb-entry {
+    display: flex;
+    align-items: center;
+    padding: 12px 14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 6px;
+    gap: 12px;
+  }
+  .lb-entry.is-you { border-color: var(--primary); background: var(--primary-glow); }
+  .lb-rank {
+    font-size: 16px;
+    font-weight: 800;
+    min-width: 30px;
+    text-align: center;
+  }
+  .lb-rank.gold { color: #fbbf24; }
+  .lb-rank.silver { color: #94a3b8; }
+  .lb-rank.bronze { color: #cd7f32; }
+  .lb-name { flex: 1; font-weight: 600; font-size: 14px; }
+  .lb-pts {
+    font-weight: 700;
+    color: var(--primary);
+    font-size: 15px;
+  }
+  .lb-preds { font-size: 11px; color: var(--text-muted); }
+
+  /* ── My Predictions ── */
+  .pred-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  .pred-card .pred-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .pred-card .pred-match { font-weight: 700; font-size: 14px; }
+  .pred-card .pred-pts {
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .pts-positive { background: rgba(16,185,129,0.15); color: var(--green); }
+  .pts-zero { background: rgba(100,116,139,0.15); color: var(--text-muted); }
+  .pts-pending { background: var(--primary-glow); color: var(--primary); }
+
+  /* ── Points Breakdown ── */
+  .points-info {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .points-info h3 { font-size: 16px; font-weight: 700; margin-bottom: 12px; text-align: center; }
+  .points-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .points-row:last-child { border-bottom: none; }
+  .points-row .pts-val { color: var(--primary); font-weight: 700; }
+
+  /* ── Loading / Empty ── */
+  .loading, .empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+  }
+  .loading .spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 12px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast {
+    position: fixed;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--green);
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 14px;
+    z-index: 200;
+    transition: transform 0.3s;
+    white-space: nowrap;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--red); }
+
+  .scrollable-options {
+    max-height: 200px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .scrollable-options::-webkit-scrollbar { width: 4px; }
+  .scrollable-options::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .closed-overlay {
+    text-align: center;
+    padding: 24px;
+    color: var(--red);
+    font-weight: 600;
+    font-size: 15px;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🏏 IPL 2026 PREDICTOR</h1>
+  <div class="subtitle">Predict & Win — Powered by Cricket</div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="matches">
+    <span class="tab-icon">🏏</span>Matches
+  </div>
+  <div class="tab" data-tab="leaderboard">
+    <span class="tab-icon">🏆</span>Leaderboard
+  </div>
+  <div class="tab" data-tab="predictions">
+    <span class="tab-icon">📝</span>My Picks
+  </div>
+  <div class="tab" data-tab="points">
+    <span class="tab-icon">💡</span>Points
+  </div>
+</div>
+
+<!-- ═══ MATCHES PAGE ═══ -->
+<div id="page-matches" class="page active">
+  <div id="matches-list"><div class="loading"><div class="spinner"></div>Loading matches...</div></div>
+</div>
+
+<!-- ═══ PREDICT PAGE ═══ -->
+<div id="page-predict" class="page predict-page"></div>
+
+<!-- ═══ LEADERBOARD PAGE ═══ -->
+<div id="page-leaderboard" class="page">
+  <div id="leaderboard-content"><div class="loading"><div class="spinner"></div>Loading leaderboard...</div></div>
+</div>
+
+<!-- ═══ MY PREDICTIONS PAGE ═══ -->
+<div id="page-predictions" class="page">
+  <div id="predictions-content"><div class="loading"><div class="spinner"></div>Loading predictions...</div></div>
+</div>
+
+<!-- ═══ POINTS INFO PAGE ═══ -->
+<div id="page-points" class="page">
+  <div class="points-info">
+    <h3>🏆 How to Earn Points</h3>
+    <div class="points-row"><span>🪙 Toss Winner</span><span class="pts-val">5 pts</span></div>
+    <div class="points-row"><span>🏆 Match Winner</span><span class="pts-val">10 pts</span></div>
+    <div class="points-row"><span>🏏 Top Run-Scorer</span><span class="pts-val">20 pts</span></div>
+    <div class="points-row"><span>🎯 Top Wicket-Taker</span><span class="pts-val">20 pts</span></div>
+    <div class="points-row"><span>⭐ Player of the Match</span><span class="pts-val">25 pts</span></div>
+  </div>
+  <div class="points-info">
+    <h3>📋 Rules</h3>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.6;">
+      <p style="margin-bottom:8px;">• Predictions close at match start time (IST)</p>
+      <p style="margin-bottom:8px;">• You can only pick players from the two teams playing</p>
+      <p style="margin-bottom:8px;">• You can update predictions before the match starts</p>
+      <p style="margin-bottom:8px;">• Maximum 80 points per match</p>
+      <p>• Leaderboard updates after each match result</p>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ── Config ──
+const API = window.location.origin;
+let tg = window.Telegram?.WebApp;
+let telegramUser = null;
+
+if (tg) {
+  tg.ready();
+  tg.expand();
+  tg.setHeaderColor('#0a0e1a');
+  tg.setBackgroundColor('#0a0e1a');
+  telegramUser = tg.initDataUnsafe?.user;
+}
+
+// Dev fallback
+if (!telegramUser) {
+  const urlParams = new URLSearchParams(window.location.search);
+  telegramUser = {
+    id: parseInt(urlParams.get('telegram_id')) || 123456789,
+    username: urlParams.get('username') || 'dev_user',
+    first_name: urlParams.get('first_name') || 'Dev',
+  };
+}
+
+function getAuthParams() {
+  if (tg?.initData) return { headers: { 'X-Telegram-Init-Data': tg.initData } };
+  return {};
+}
+
+function authQuery() {
+  if (tg?.initData) return '';
+  return `?telegram_id=${telegramUser.id}&username=${telegramUser.username}&first_name=${telegramUser.first_name}`;
+}
+
+// ── API Helpers ──
+async function apiFetch(path) {
+  const auth = getAuthParams();
+  const sep = path.includes('?') ? '&' : '?';
+  const url = tg?.initData ? `${API}${path}` : `${API}${path}${sep}telegram_id=${telegramUser.id}&username=${telegramUser.username}&first_name=${telegramUser.first_name}`;
+  const res = await fetch(url, auth);
+  return res.json();
+}
+
+async function apiPost(path, data) {
+  const auth = getAuthParams();
+  const body = tg?.initData ? data : { ...data, telegram_id: telegramUser.id, username: telegramUser.username, first_name: telegramUser.first_name };
+  const res = await fetch(`${API}${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...auth.headers },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+// ── Toast ──
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = isError ? 'toast error show' : 'toast show';
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+// ── Tab Navigation ──
+let currentTab = 'matches';
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.dataset.tab;
+    switchTab(target);
+  });
+});
+
+function switchTab(target) {
+  currentTab = target;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === target));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(`page-${target}`).classList.add('active');
+
+  if (target === 'matches') loadMatches();
+  if (target === 'leaderboard') loadLeaderboard();
+  if (target === 'predictions') loadMyPredictions();
+}
+
+// ── Load Matches ──
+async function loadMatches() {
+  const container = document.getElementById('matches-list');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading matches...</div>';
+
+  try {
+    const matches = await apiFetch('/api/matches/upcoming');
+    if (!matches.length) {
+      container.innerHTML = '<div class="empty">🏏 No upcoming matches right now.<br><small>Check back soon!</small></div>';
+      return;
+    }
+
+    container.innerHTML = matches.map(m => {
+      const matchTime = new Date(`${m.match_date}T${m.match_time}:00+05:30`);
+      const now = new Date();
+      const isOpen = matchTime > now && m.status === 'upcoming';
+      const dateStr = matchTime.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      const timeStr = m.match_time === '15:30' ? '3:30 PM' : '7:30 PM';
+
+      return `
+        <div class="match-card" onclick="openPredict(${m.id})">
+          <div class="match-num">
+            <span>Match #${m.match_number}</span>
+            <span class="badge ${isOpen ? 'badge-open' : 'badge-closed'}">${isOpen ? '🟢 OPEN' : '🔴 CLOSED'}</span>
+          </div>
+          <div class="match-teams">
+            <div class="team-info">
+              <div class="team-short">${m.home_short}</div>
+              <div class="team-name">${m.home_team}</div>
+            </div>
+            <div class="vs-text">VS</div>
+            <div class="team-info">
+              <div class="team-short">${m.away_short}</div>
+              <div class="team-name">${m.away_team}</div>
+            </div>
+          </div>
+          <div class="match-meta">
+            <span>📅 ${dateStr} | ⏰ ${timeStr} IST</span>
+            <span>📍 ${m.venue}</span>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<div class="empty">Failed to load matches. Pull down to retry.</div>';
+  }
+}
+
+// ── Open Prediction Form ──
+let currentMatch = null;
+let currentPlayers = [];
+let prediction = { toss_winner_id: null, match_winner_id: null, top_scorer_id: null, top_wicket_taker_id: null, player_of_match_id: null };
+
+async function openPredict(matchId) {
+  const page = document.getElementById('page-predict');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  page.classList.add('active');
+  page.innerHTML = '<div class="loading"><div class="spinner"></div>Loading match...</div>';
+
+  try {
+    const [match, players, existing] = await Promise.all([
+      apiFetch(`/api/match/${matchId}`),
+      apiFetch(`/api/match/${matchId}/players`),
+      apiFetch(`/api/my-prediction/${matchId}`),
+    ]);
+
+    currentMatch = match;
+    currentPlayers = players;
+
+    // Load existing prediction
+    prediction = {
+      toss_winner_id: existing.toss_winner_id || null,
+      match_winner_id: existing.match_winner_id || null,
+      top_scorer_id: existing.top_scorer_id || null,
+      top_wicket_taker_id: existing.top_wicket_taker_id || null,
+      player_of_match_id: existing.player_of_match_id || null,
+    };
+
+    const matchTime = new Date(`${match.match_date}T${match.match_time}:00+05:30`);
+    const isOpen = matchTime > new Date() && match.status === 'upcoming';
+    const timeStr = match.match_time === '15:30' ? '3:30 PM' : '7:30 PM';
+    const dateStr = matchTime.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+    const homePlayers = players.filter(p => p.team_id === match.home_team_id);
+    const awayPlayers = players.filter(p => p.team_id === match.away_team_id);
+
+    if (!isOpen) {
+      page.innerHTML = `
+        <div class="back-btn" onclick="switchTab('matches')">← Back to Matches</div>
+        <div class="predict-header">
+          <div class="match-title">${match.home_short} vs ${match.away_short}</div>
+          <div class="match-info">Match #${match.match_number} • ${dateStr} • ${timeStr} IST • ${match.venue}</div>
+        </div>
+        <div class="closed-overlay">
+          🔒 Predictions are closed for this match.<br>
+          <small style="color:var(--text-muted)">Match has started or already completed.</small>
+        </div>`;
+      return;
+    }
+
+    page.innerHTML = `
+      <div class="back-btn" onclick="switchTab('matches')">← Back to Matches</div>
+      <div class="predict-header">
+        <div class="match-title">${match.home_short} vs ${match.away_short}</div>
+        <div class="match-info">Match #${match.match_number} • ${dateStr} • ${timeStr} IST • ${match.venue}</div>
+      </div>
+
+      ${buildTeamSection('🪙 Toss Winner', 'toss_winner_id', 5, match)}
+      ${buildTeamSection('🏆 Match Winner', 'match_winner_id', 10, match)}
+      ${buildPlayerSection('🏏 Top Run-Scorer', 'top_scorer_id', 20, homePlayers, awayPlayers, match)}
+      ${buildPlayerSection('🎯 Top Wicket-Taker', 'top_wicket_taker_id', 20, homePlayers, awayPlayers, match)}
+      ${buildPlayerSection('⭐ Player of the Match', 'player_of_match_id', 25, homePlayers, awayPlayers, match)}
+
+      <button class="submit-btn" onclick="submitPrediction()">🏏 Submit Prediction</button>
+    `;
+  } catch (e) {
+    page.innerHTML = '<div class="empty">Failed to load match. <span class="back-btn" onclick="switchTab(\'matches\')">Go back</span></div>';
+  }
+}
+
+function buildTeamSection(title, field, pts, match) {
+  return `
+    <div class="predict-section">
+      <h3>${title} <span class="points-badge">${pts} pts</span></h3>
+      <div class="option-grid">
+        <div class="option-btn ${prediction[field] === match.home_team_id ? 'selected' : ''}"
+             onclick="selectTeam('${field}', ${match.home_team_id}, this)">
+          <div class="radio"></div>
+          <span>${match.home_team}</span>
+        </div>
+        <div class="option-btn ${prediction[field] === match.away_team_id ? 'selected' : ''}"
+             onclick="selectTeam('${field}', ${match.away_team_id}, this)">
+          <div class="radio"></div>
+          <span>${match.away_team}</span>
+        </div>
+      </div>
+    </div>`;
+}
+
+function buildPlayerSection(title, field, pts, homePlayers, awayPlayers, match) {
+  const sectionId = `section-${field}`;
+  const filterId = `filter-${field}`;
+  const searchId = `search-${field}`;
+
+  return `
+    <div class="predict-section" id="${sectionId}">
+      <h3>${title} <span class="points-badge">${pts} pts</span></h3>
+      <div class="desc">Select from match players</div>
+      <input type="text" class="player-search" id="${searchId}" placeholder="🔍 Search player..."
+             oninput="filterPlayers('${field}', '${match.home_team_id}', '${match.away_team_id}')">
+      <div class="team-filter" id="${filterId}">
+        <div class="team-filter-btn active" data-team="all" onclick="setTeamFilter('${field}', 'all', this, '${match.home_team_id}', '${match.away_team_id}')">All</div>
+        <div class="team-filter-btn" data-team="${match.home_team_id}" onclick="setTeamFilter('${field}', '${match.home_team_id}', this, '${match.home_team_id}', '${match.away_team_id}')">${match.home_short}</div>
+        <div class="team-filter-btn" data-team="${match.away_team_id}" onclick="setTeamFilter('${field}', '${match.away_team_id}', this, '${match.home_team_id}', '${match.away_team_id}')">${match.away_short}</div>
+      </div>
+      <div class="scrollable-options option-grid" id="players-${field}">
+        ${renderPlayers(field, [...homePlayers, ...awayPlayers])}
+      </div>
+    </div>`;
+}
+
+function renderPlayers(field, players) {
+  return players.map(p => `
+    <div class="option-btn ${prediction[field] === p.id ? 'selected' : ''}"
+         onclick="selectPlayer('${field}', ${p.id}, this)" data-team="${p.team_id}" data-name="${p.name.toLowerCase()}">
+      <div class="radio"></div>
+      <span>${p.name}</span>
+      <span class="player-role">${p.team_short} • ${p.role}</span>
+    </div>`).join('');
+}
+
+function selectTeam(field, teamId, el) {
+  prediction[field] = teamId;
+  el.parentElement.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function selectPlayer(field, playerId, el) {
+  prediction[field] = playerId;
+  document.getElementById(`players-${field}`).querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+let activeFilters = {};
+function setTeamFilter(field, team, el, homeId, awayId) {
+  activeFilters[field] = team;
+  el.parentElement.querySelectorAll('.team-filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  filterPlayers(field, homeId, awayId);
+}
+
+function filterPlayers(field, homeId, awayId) {
+  const search = document.getElementById(`search-${field}`).value.toLowerCase();
+  const teamFilter = activeFilters[field] || 'all';
+  const container = document.getElementById(`players-${field}`);
+
+  container.querySelectorAll('.option-btn').forEach(btn => {
+    const name = btn.dataset.name;
+    const team = btn.dataset.team;
+    const matchesSearch = !search || name.includes(search);
+    const matchesTeam = teamFilter === 'all' || team === teamFilter;
+    btn.style.display = (matchesSearch && matchesTeam) ? 'flex' : 'none';
+  });
+}
+
+async function submitPrediction() {
+  if (!currentMatch) return;
+
+  // Validate
+  const missing = [];
+  if (!prediction.toss_winner_id) missing.push('Toss Winner');
+  if (!prediction.match_winner_id) missing.push('Match Winner');
+  if (!prediction.top_scorer_id) missing.push('Top Scorer');
+  if (!prediction.top_wicket_taker_id) missing.push('Top Wicket-Taker');
+  if (!prediction.player_of_match_id) missing.push('Player of Match');
+
+  if (missing.length > 0) {
+    showToast(`Please select: ${missing.join(', ')}`, true);
+    return;
+  }
+
+  try {
+    const result = await apiPost('/api/predict', {
+      match_id: currentMatch.id,
+      ...prediction,
+    });
+
+    if (result.error) {
+      showToast(result.error, true);
+      return;
+    }
+
+    showToast('✅ Prediction submitted!');
+    setTimeout(() => switchTab('matches'), 1200);
+  } catch (e) {
+    showToast('Failed to submit. Try again.', true);
+  }
+}
+
+// ── Leaderboard ──
+async function loadLeaderboard() {
+  const container = document.getElementById('leaderboard-content');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading leaderboard...</div>';
+
+  try {
+    const [lb, rank] = await Promise.all([
+      apiFetch('/api/leaderboard'),
+      apiFetch('/api/my-rank'),
+    ]);
+
+    let html = `
+      <div class="lb-header">
+        <div class="rank-label">YOUR RANK</div>
+        <div class="rank-big">#${rank.rank || '—'}</div>
+        <div class="points-big">${rank.points || 0} points</div>
+        <div class="rank-label">out of ${rank.total || 0} players</div>
+      </div>`;
+
+    if (!lb.length) {
+      html += '<div class="empty">No predictions yet. Be the first!</div>';
+    } else {
+      lb.forEach((entry, i) => {
+        const rankNum = i + 1;
+        const isYou = entry.telegram_id === telegramUser.id;
+        const name = entry.username ? `@${entry.username}` : entry.first_name || 'Anonymous';
+        const rankClass = rankNum === 1 ? 'gold' : rankNum === 2 ? 'silver' : rankNum === 3 ? 'bronze' : '';
+        const medal = rankNum === 1 ? '🥇' : rankNum === 2 ? '🥈' : rankNum === 3 ? '🥉' : rankNum;
+
+        html += `
+          <div class="lb-entry ${isYou ? 'is-you' : ''}">
+            <div class="lb-rank ${rankClass}">${medal}</div>
+            <div>
+              <div class="lb-name">${name}${isYou ? ' (You)' : ''}</div>
+              <div class="lb-preds">${entry.predictions_made} predictions</div>
+            </div>
+            <div class="lb-pts">${entry.total_points} pts</div>
+          </div>`;
+      });
+    }
+
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="empty">Failed to load leaderboard.</div>';
+  }
+}
+
+// ── My Predictions ──
+async function loadMyPredictions() {
+  const container = document.getElementById('predictions-content');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>Loading predictions...</div>';
+
+  try {
+    const preds = await apiFetch('/api/my-predictions');
+    if (!preds.length) {
+      container.innerHTML = '<div class="empty">📝 No predictions yet.<br><small>Go to Matches tab to start predicting!</small></div>';
+      return;
+    }
+
+    container.innerHTML = preds.map(p => {
+      const status = p.match_status === 'completed'
+        ? (p.points_earned > 0 ? 'positive' : 'zero')
+        : 'pending';
+      const statusText = p.match_status === 'completed'
+        ? (p.points_earned > 0 ? `+${p.points_earned} pts` : '0 pts')
+        : '⏳ Pending';
+
+      return `
+        <div class="pred-card">
+          <div class="pred-header">
+            <span class="pred-match">#${p.match_number} ${p.home_short} vs ${p.away_short}</span>
+            <span class="pred-pts pts-${status}">${statusText}</span>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);">
+            ${p.match_date}
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<div class="empty">Failed to load predictions.</div>';
+  }
+}
+
+// ── Init ──
+(async function init() {
+  // Register user
+  await apiPost('/api/user/register', {
+    telegram_id: telegramUser.id,
+    username: telegramUser.username,
+    first_name: telegramUser.first_name,
+    last_name: telegramUser.last_name,
+  });
+
+  // Check hash for direct navigation
+  const hash = window.location.hash.replace('#', '');
+  if (hash === 'leaderboard') switchTab('leaderboard');
+  else if (hash === 'predictions') switchTab('predictions');
+  else loadMatches();
+})();
+</script>
+</body>
+</html>
