@@ -389,3 +389,42 @@ def get_match_predictions_detail(match_id):
     """, (match_id,)).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+# ── Today's matches ──
+def get_todays_matches():
+    conn = get_db()
+    today = datetime.now().strftime("%Y-%m-%d")
+    rows = conn.execute("""
+        SELECT m.*, ht.name as home_team, ht.short_name as home_short,
+               at.name as away_team, at.short_name as away_short
+        FROM matches m
+        JOIN teams ht ON m.home_team_id = ht.id
+        JOIN teams at ON m.away_team_id = at.id
+        WHERE m.match_date = ?
+        ORDER BY m.match_time
+    """, (today,)).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+# ── User prediction with full player/team names ──
+def get_user_prediction_detail(user_id, match_id):
+    conn = get_db()
+    row = conn.execute("""
+        SELECT p.*,
+               tw.name as toss_team_name, tw.short_name as toss_team_short,
+               mw.name as match_team_name, mw.short_name as match_team_short,
+               ts.name as top_scorer_name,
+               twk.name as top_wicket_name,
+               pom.name as potm_name
+        FROM predictions p
+        LEFT JOIN teams tw ON p.toss_winner_id = tw.id
+        LEFT JOIN teams mw ON p.match_winner_id = mw.id
+        LEFT JOIN players ts ON p.top_scorer_id = ts.id
+        LEFT JOIN players twk ON p.top_wicket_taker_id = twk.id
+        LEFT JOIN players pom ON p.player_of_match_id = pom.id
+        WHERE p.user_id = ? AND p.match_id = ?
+    """, (user_id, match_id)).fetchone()
+    conn.close()
+    return dict(row) if row else None
