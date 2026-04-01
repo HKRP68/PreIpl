@@ -520,31 +520,32 @@ if (!telegramUser) {
   };
 }
 
-function getAuthParams() {
-  if (tg?.initData) return { headers: { 'X-Telegram-Init-Data': tg.initData } };
-  return {};
-}
-
-function authQuery() {
-  if (tg?.initData) return '';
-  return `?telegram_id=${telegramUser.id}&username=${telegramUser.username}&first_name=${telegramUser.first_name}`;
+function getAuthHeaders() {
+  const headers = {};
+  if (tg?.initData) headers['X-Telegram-Init-Data'] = tg.initData;
+  return headers;
 }
 
 // ── API Helpers ──
+// ALWAYS send telegram_id in params/body as reliable fallback
+// (initData header is a bonus but can fail on some setups)
 async function apiFetch(path) {
-  const auth = getAuthParams();
   const sep = path.includes('?') ? '&' : '?';
-  const url = tg?.initData ? `${API}${path}` : `${API}${path}${sep}telegram_id=${telegramUser.id}&username=${telegramUser.username}&first_name=${telegramUser.first_name}`;
-  const res = await fetch(url, auth);
+  const url = `${API}${path}${sep}telegram_id=${telegramUser.id}&username=${encodeURIComponent(telegramUser.username || '')}&first_name=${encodeURIComponent(telegramUser.first_name || '')}`;
+  const res = await fetch(url, { headers: getAuthHeaders() });
   return res.json();
 }
 
 async function apiPost(path, data) {
-  const auth = getAuthParams();
-  const body = tg?.initData ? data : { ...data, telegram_id: telegramUser.id, username: telegramUser.username, first_name: telegramUser.first_name };
+  const body = {
+    ...data,
+    telegram_id: telegramUser.id,
+    username: telegramUser.username || '',
+    first_name: telegramUser.first_name || '',
+  };
   const res = await fetch(`${API}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...auth.headers },
+    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
     body: JSON.stringify(body),
   });
   return res.json();
