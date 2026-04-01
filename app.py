@@ -285,50 +285,32 @@ def admin_team_players(team_id):
     team = next((t for t in teams if t["id"] == team_id), None)
     return render_template("admin_players.html", players=players, team=team, teams=teams)
 
+
+# ────────────────────────────────────────
+#  SEED DATABASE (Run once via browser)
+# ────────────────────────────────────────
+
 @app.route("/admin/seed")
 @admin_required
 def admin_seed():
     from seed_data import seed
     seed()
-    return "Database seeded! <a href='/admin'>Go to Admin</a>"
-```
+    return """
+    <html><head><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>body{font-family:system-ui;background:#0a0e1a;color:#f1f5f9;display:flex;justify-content:center;align-items:center;min-height:100vh;text-align:center;}
+    .box{background:#111827;border:1px solid #1e293b;border-radius:16px;padding:32px;max-width:400px;}
+    h2{color:#10b981;margin-bottom:12px;}
+    a{color:#3b82f6;text-decoration:none;font-weight:600;}</style></head>
+    <body><div class="box">
+    <h2>✅ Database Seeded Successfully!</h2>
+    <p style="color:#94a3b8;margin-bottom:16px;">70 matches, 10 teams, 249 players loaded.</p>
+    <a href="/admin">→ Go to Admin Dashboard</a>
+    </div></body></html>
+    """
 
-Then visit: `https://your-railway-url.up.railway.app/admin/seed` in your browser (login with your admin password first).
 
----
-
-## Step 5: Configure the Mini App in BotFather
-
-Go back to **Telegram → @BotFather** and send these commands:
-
-**5a. Set the Menu Button (the button users see at bottom of chat):**
-```
-/setmenubutton
-```
-→ Select your bot
-→ Send the URL: `https://ipl-prediction-bot-production.up.railway.app`
-→ Send the button text: `🏏 Predict`
-
-**5b. Set bot commands (so users see a command list):**
-```
-/setcommands
-```
-→ Select your bot
-→ Send this entire block:
-```
-predict - Make match predictions
-leaderboard - View rankings
-myrank - Your current rank
-mypredictions - Your prediction history
-schedule - Upcoming matches
-help - How to use this bot
-```
-
-**5c. Set bot description:**
-```
-/setdescription
-
+# ── Auto-initialize DB on startup ──
+db.init_db()
 
 if __name__ == "__main__":
-    db.init_db()
     app.run(host="0.0.0.0", port=5000, debug=True)
