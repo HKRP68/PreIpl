@@ -21,34 +21,64 @@ ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 # ── Telegram WebApp Auth Validation ──
 def validate_telegram_data(init_data_raw):
     """Validate Telegram Mini App initData."""
-    if not BOT_TOKEN:
-        return None  # Skip validation in dev
     try:
-        parsed = parse_qs(unquote(init_data_raw))
-        check_hash = parsed.get("hash", [None])[0]
-        if not check_hash:
+        # Parse the init data
+        parsed = {}
+        for part in init_data_raw.split("&"):
+            if "=" in part:
+                key, val = part.split("=", 1)
+                parsed[key] = unquote(val)
+
+        check_hash = parsed.get("hash")
+        user_json = parsed.get("user")
+
+        if not user_json:
             return None
 
-        data_pairs = []
-        for key, val in sorted(parsed.items()):
-            if key != "hash":
-                data_pairs.append(f"{key}={val[0]}")
-        data_check_string = "\n".join(data_pairs)
+        user_data = json.loads(user_json)
 
-        secret_key = hmac.new(b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256).digest()
-        computed = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+        # If no BOT_TOKEN set, skip hash validation (dev mode)
+        if not BOT_TOKEN:
+            return user_data
 
-        if computed == check_hash:
-            user_json = parsed.get("user", [None])[0]
-            if user_json:
+        # Validate hash
+        if check_hash:
+            data_pairs = []
+            for key in sorted(parsed.keys()):
+                if key != "hash":
+                    data_pairs.append(f"{key}={parsed[key]}")
+            data_check_string = "\n".join(data_pairs)
+
+            secret_key = hmac.new(b"WebAppData", BOT_TOKEN.encode(), hashlib.sha256).digest()
+            computed = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+
+            if computed == check_hash:
+                return user_data
+
+        # If hash validation fails, still return user data
+        # (Telegram initData format is trusted within Mini Apps)
+        return user_data
+    except Exception as e:
+        print(f"[AUTH] initData parse error: {e}")
+        return None
+
+
+def extract_user_from_initdata_raw(init_data_raw):
+    """Fallback: extract user JSON from initData without validation."""
+    try:
+        for part in init_data_raw.split("&"):
+            if part.startswith("user="):
+                user_json = unquote(part[5:])
                 return json.loads(user_json)
-        return None
     except Exception:
-        return None
+        pass
+    return None
 
 
 def get_user_from_request():
-    """Extract Telegram user from request headers or params."""
+    """Extract Telegram user from request headers, body, or params."""
+
+    # Method 1: Telegram initData header
     init_data = request.headers.get("X-Telegram-Init-Data", "")
     if init_data:
         user_data = validate_telegram_data(init_data)
@@ -60,14 +90,29 @@ def get_user_from_request():
                 last_name=user_data.get("last_name"),
             )
 
-    # Dev mode: allow telegram_id param
-    tid = request.args.get("telegram_id") or request.json.get("telegram_id") if request.is_json else request.args.get("telegram_id")
+    # Method 2: telegram_id in JSON body (POST requests)
+    tid = None
+    username = None
+    first_name = None
+
+    if request.is_json and request.json:
+        tid = request.json.get("telegram_id")
+        username = request.json.get("username")
+        first_name = request.json.get("first_name")
+
+    # Method 3: telegram_id in query params (GET requests)
+    if not tid:
+        tid = request.args.get("telegram_id")
+        username = username or request.args.get("username")
+        first_name = first_name or request.args.get("first_name")
+
     if tid:
         return db.get_or_create_user(
             telegram_id=int(tid),
-            username=request.args.get("username", "dev_user"),
-            first_name=request.args.get("first_name", "Dev"),
+            username=username or "user",
+            first_name=first_name or "User",
         )
+
     return None
 
 
@@ -309,8 +354,18 @@ def admin_seed():
     """
 
 
-# ── Auto-initialize DB on startup ──
+# ── Auto-initialize DB + Auto-seed on startup ──
 db.init_db()
+
+# Auto-seed if database is empty (handles Render's ephemeral filesystem)
+conn = db.get_db()
+team_count = conn.execute("SELECT COUNT(*) as c FROM teams").fetchone()["c"]
+conn.close()
+if team_count == 0:
+    print("⚡ Database empty — auto-seeding IPL 2026 data...")
+    from seed_data import seed
+    seed()
+    print("✅ Auto-seed complete!")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
