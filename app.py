@@ -285,6 +285,49 @@ def admin_team_players(team_id):
     team = next((t for t in teams if t["id"] == team_id), None)
     return render_template("admin_players.html", players=players, team=team, teams=teams)
 
+@app.route("/admin/seed")
+@admin_required
+def admin_seed():
+    from seed_data import seed
+    seed()
+    return "Database seeded! <a href='/admin'>Go to Admin</a>"
+```
+
+Then visit: `https://your-railway-url.up.railway.app/admin/seed` in your browser (login with your admin password first).
+
+---
+
+## Step 5: Configure the Mini App in BotFather
+
+Go back to **Telegram → @BotFather** and send these commands:
+
+**5a. Set the Menu Button (the button users see at bottom of chat):**
+```
+/setmenubutton
+```
+→ Select your bot
+→ Send the URL: `https://ipl-prediction-bot-production.up.railway.app`
+→ Send the button text: `🏏 Predict`
+
+**5b. Set bot commands (so users see a command list):**
+```
+/setcommands
+```
+→ Select your bot
+→ Send this entire block:
+```
+predict - Make match predictions
+leaderboard - View rankings
+myrank - Your current rank
+mypredictions - Your prediction history
+schedule - Upcoming matches
+help - How to use this bot
+```
+
+**5c. Set bot description:**
+```
+/setdescription
+
 
 if __name__ == "__main__":
     db.init_db()
